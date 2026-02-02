@@ -19,19 +19,19 @@ FILE LAYOUT
 
 [Header] (fixed size)
 Offset  Size  Meaning
-0       4     Magic "TDST"
-4       48     Version ([6]const u8)
-52      2     Header size (u16)
-54      8     Record count (u64)
-62      8     Record table offset (u64)  // 2 
-70      8     String blob offset (u64)   // what is this? why is this even needed?
-78      8     File size (u64)
+0       4     Magic "TDOS"
+4       2     Version (u16) = 1
+6       2     Header size (u16)
+8       8     Record count (u64)
+16      8     Record table offset (u64)
+24      8     String blob offset (u64)
+32      8     File size (u64)
 
-[Record Table] (repeated)
-Each record:
-  0     8     String offset (u64)
-  8     4     String length (u32)
-  12    4     Flags / reserved
+[Record Table]
+Each record (fixed 16 bytes):
+0       8     String offset (u64)
+8       4     String length (u32)
+12      4     Flags (done, deleted, etc.)
 
 [String Blob]
 Raw UTF-8 bytes, tightly packed

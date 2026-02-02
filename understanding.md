@@ -9,3 +9,6 @@ A binary layout table is just you answering:
 A file format is not “about data types”.
 It is about layout + invariants + access patterns.
 Once you grasp that, the rest becomes engineering, not mystery.
+
+--------------------------------- DAY 2. 
+
