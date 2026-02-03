@@ -58,6 +58,21 @@ test "struct" {
 }
 
 // create new file function 
-// pub fn create_new_file(name:[]u8) !void{
-//
-// }
+pub fn create_new_file(name:[]u8) !void{
+
+    const h = header{
+        .magic = "TDOS",
+        .version = 1, 
+        .header_size = 40,
+        .file_size = 0,
+        .record_count = 0,
+        .record_table_offset = 40,
+    };
+    
+    const cwd = std.fs.cwd();  
+    var file = try cwd.createFile("test_file.tdos", .{});
+    defer file.close();
+
+
+
+}
