@@ -29,6 +29,7 @@ const record_table = struct {
     string_offset:u64,
     string_length:u32,
     flags:u32, // 0-done 1-deleted
+    next_record_offset:u64,
 };
 
 // [String Blob]
@@ -46,6 +47,14 @@ test "struct" {
         .record_table_offset = 40,
     };
     std.debug.print("{}\n", .{h});
+
+    const rt = record_table{
+        .string_offset = 56, 
+        .string_length = 10, 
+        .flags = 0,
+        .next_record_offset = 56 + 10 ,
+    };
+    std.debug.print("{}\n", .{rt});
 }
 
 // create new file function 
