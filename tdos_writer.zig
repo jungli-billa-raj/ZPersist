@@ -15,12 +15,13 @@ const header = struct {
     header_size:u16,
     record_count:u64,
     record_table_offset:u64,
-    string_blob_offset:u64,
+    // string_blob_offset:u64,
     file_size:u64,
 };
 
 // [Record Table]
 // Each record (fixed 16 bytes):
+// Offset  Size  Meaning
 // 0       8     String offset (u64)
 // 8       4     String length (u32)
 // 12      4     Flags (done, deleted, etc.)
@@ -33,3 +34,21 @@ const record_table = struct {
 // [String Blob]
 // Raw UTF-8 bytes, tightly packed
 // No struct needed
+
+// ----------------------testing structs----------------------
+test "struct" {
+    const h = header{
+        .magic = "TDOS",
+        .version = 2, 
+        .header_size = 0,
+        .file_size = 0,
+        .record_count = 0,
+        .record_table_offset = 40,
+    };
+    std.debug.print("{}\n", .{h});
+}
+
+// create new file function 
+// pub fn create_new_file(name:[]u8) !void{
+//
+// }
