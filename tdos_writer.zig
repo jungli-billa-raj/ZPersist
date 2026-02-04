@@ -9,7 +9,7 @@ const std = @import("std");
 // 16      8     Record table offset (u64)
 // 24      8     String blob offset (u64)
 // 32      8     File size (u64)
-const header = struct {
+const header = extern struct {
     magic:[]const u8 = "TDOS", 
     version:u16 = 1,
     header_size:u16,
@@ -25,7 +25,7 @@ const header = struct {
 // 0       8     String offset (u64)
 // 8       4     String length (u32)
 // 12      4     Flags (done, deleted, etc.)
-const record_table = struct {
+const record_table = extern struct {
     string_offset:u64,
     string_length:u32,
     flags:u32, // 0-done 1-deleted
@@ -60,27 +60,35 @@ test "struct" {
 // create new file function 
 pub fn create_new_file(name:[]const u8) !void{
 
-    // const h = header{
-    //     .magic = "TDOS",
-    //     .version = 1, 
-    //     .header_size = 40,
-    //     .file_size = 0,
-    //     .record_count = 0,
-    //     .record_table_offset = 40,
-    // };
+    const h = header{
+        .magic = "TDOS",
+        .version = 1, 
+        .header_size = 40,
+        .file_size = 0,
+        .record_count = 0,
+        .record_table_offset = 40,
+    };
     var pathBuffer:[256]u8 = undefined;
     const path = try std.fmt.bufPrint(&pathBuffer, "{s}.tdos", .{name});
     var file = try std.fs.cwd().createFile(path, .{.read = true });
     defer file.close();
 
-    var buffer:[256]u8 = undefined;
-    var writer = file.writer(&buffer);
-    try writer.interface.writeAll("Hello zig bytes here!!");
-    
-    // flushing is important while using a buffered writer 
-    try writer.interface.flush();
+    // var buffer:[256]u8 = undefined;
+    // var writer = file.writer(&buffer);
+    // try writer.interface.writeAll("Hello zig bytes here!!");
+    //
+    // // flushing is important while using a buffered writer 
+    // try writer.interface.flush();
+
+    try file.writeAll(std.mem.asBytes(&h));
 }
 
 test "create_new_file" {
     try create_new_file("test_file");
+    //I'm not testing the first few bytes yet. 
 }
+
+// This will come in handy
+// const file = try cwd.openFile("output.bin", .{ .mode = .read_write });
+// try file.seekFromEnd(0); // Move the cursor to the end
+// try file.writeAll(&more_bytes);
