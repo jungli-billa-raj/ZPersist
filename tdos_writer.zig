@@ -9,7 +9,7 @@ const std = @import("std");
 // 16      8     Record table offset (u64)
 // 24      8     String blob offset (u64)
 // 32      8     File size (u64)
-const header = extern struct {
+const header =  struct {
     magic:[]const u8 = "TDOS", 
     version:u16 = 1,
     header_size:u16,
@@ -25,7 +25,7 @@ const header = extern struct {
 // 0       8     String offset (u64)
 // 8       4     String length (u32)
 // 12      4     Flags (done, deleted, etc.)
-const record_table = extern struct {
+const record_table =  struct {
     string_offset:u64,
     string_length:u32,
     flags:u32, // 0-done 1-deleted
@@ -80,7 +80,11 @@ pub fn create_new_file(name:[]const u8) !void{
     // // flushing is important while using a buffered writer 
     // try writer.interface.flush();
 
-    try file.writeAll(std.mem.asBytes(&h));
+    var header_buffer:[256]u8 = undefined;
+    _ = try std.fmt.bufPrint(&header_buffer,"{b64}{b64}{b64}{b64}{b64}{b64}\n", .{std.mem.asBytes(&h.magic),std.mem.asBytes(&h.version),std.mem.asBytes(&h.header_size),std.mem.asBytes(&h.file_size),std.mem.asBytes(&h.record_count),std.mem.asBytes(&h.record_table_offset)});
+
+    // try file.writeAll(std.mem.asBytes(&h));
+    try file.writeAll(std.mem.asBytes(&header_buffer));
 }
 
 test "create_new_file" {
