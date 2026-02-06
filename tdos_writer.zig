@@ -80,11 +80,13 @@ pub fn create_new_file(name:[]const u8) !void{
     // // flushing is important while using a buffered writer 
     // try writer.interface.flush();
 
-    var header_buffer:[256]u8 = undefined;
-    _ = try std.fmt.bufPrint(&header_buffer,"{b64}{b64}{b64}{b64}{b64}{b64}\n", .{std.mem.asBytes(&h.magic),std.mem.asBytes(&h.version),std.mem.asBytes(&h.header_size),std.mem.asBytes(&h.file_size),std.mem.asBytes(&h.record_count),std.mem.asBytes(&h.record_table_offset)});
-
-    // try file.writeAll(std.mem.asBytes(&h));
-    try file.writeAll(std.mem.asBytes(&header_buffer));
+    var file_buffer: [320]u8 = undefined; 
+    var writer = file.writer(&file_buffer);
+    const writer_interface = &writer.interface;
+    // try writer.writeStruct(h); // Or use the built-in struct writer
+    try writer_interface.writeStruct(h, .little);
+    defer writer_interface.flush();
+    try writer_interface.print("Written Successfully", .{});
 }
 
 test "create_new_file" {
