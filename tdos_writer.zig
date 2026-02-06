@@ -40,7 +40,7 @@ const record_table =  struct {
 // ----------------------testing structs----------------------
 test "struct" {
     const h = header{
-        .magic = "TDOS",
+        // .magic = "TDOS",
         .version = 2, 
         .header_size = 0,
         .file_size = 0,
@@ -62,7 +62,7 @@ test "struct" {
 pub fn create_new_file(name:[]const u8) !void{
 
     const h = header{
-        .magic = "TDOS",
+        // .magic = "TDOS",
         .version = 1, 
         .header_size = 40,
         .file_size = 0,
@@ -86,7 +86,7 @@ pub fn create_new_file(name:[]const u8) !void{
     const writer_interface = &writer.interface;
     // try writer.writeStruct(h); // Or use the built-in struct writer
     try writer_interface.writeStruct(h, .little);
-    defer writer_interface.flush();
+    try writer_interface.flush();
     try writer_interface.print("Written Successfully", .{});
 }
 
