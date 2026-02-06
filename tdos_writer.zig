@@ -9,8 +9,9 @@ const std = @import("std");
 // 16      8     Record table offset (u64)
 // 24      8     String blob offset (u64)
 // 32      8     File size (u64)
-const header =  struct {
-    magic:[]const u8 = "TDOS", 
+const header =  extern struct {
+    // magic:[]const u8 = "TDOS", //this has a pointer+length. Not compatible with C or Binary. 
+    magic:[4]u8 = "TDOS".*, // here dereferencing is necessary to get the data "TDOS" and not the pointer to it. 
     version:u16 = 1,
     header_size:u16,
     record_count:u64,
