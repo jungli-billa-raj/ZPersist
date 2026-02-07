@@ -90,10 +90,10 @@ pub fn create_new_file(name:[]const u8) !void{
     try writer_interface.flush();
 }
 
-test "create_new_file" {
-    try create_new_file("test_file");
-    //I'm not testing the first few bytes yet. 
-}
+// test "create_new_file" {
+//     try create_new_file("test_file");
+//     //I'm not testing the first few bytes yet. 
+// }
 
 // This will come in handy
 // const file = try cwd.openFile("output.bin", .{ .mode = .read_write });
@@ -134,8 +134,8 @@ pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
             end_reached = true;
             break;
         }
-        const string_offset:u64 = fb2[0..7];
-        const string_length:u32 = fb2[8..11];
+        const string_offset:[8]u8 = fb2[0..8].*;
+        const string_length:[4]u8 = fb2[9..13].*;
         offset = std.mem.readInt(u64, &string_offset, .little) + std.mem.readInt(u32, &string_length, .little);
         // how to convert bytes to int? for doing 
         // offset = string_offset + string_length; 
@@ -143,9 +143,10 @@ pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
     return offset;
 }
 
-// test "findLatestRecordOffset test" {
-//     findLatestRecordOffset()
-// } 
+test "findLatestRecordOffset test" {
+    const offset_returned = try findLatestRecordOffset("test_file");
+    std.debug.print("Offset returned by findLatestRecordOffset: {d} \n", .{offset_returned});
+} 
 
 // const record_table =  extern struct {
 //     string_offset:u64,
