@@ -100,22 +100,22 @@ test "create_new_file" {
 // try file.seekFromEnd(0); // Move the cursor to the end
 // try file.writeAll(&more_bytes);
 
-pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
-    var newRecord = record_table{
-        .flags = 2,
-        .string_length = data.len,
-    };
-    var fb1:[256]u8 = undefined;
-    const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
-    var file = try std.fs.cwd().openFile(path, .{.mode = .read_write });
-    defer file.close();
-
-    // seek to first record 
-    try file.seekTo(40);
-    var fb2:[24]u8 = undefined;
-    const bytes_read = try file.read(&fb2);
-    // current_offset = 
-}
+// pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
+//     var newRecord = record_table{
+//         .flags = 2,
+//         .string_length = data.len,
+//     };
+//     var fb1:[256]u8 = undefined;
+//     const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
+//     var file = try std.fs.cwd().openFile(path, .{.mode = .read_write });
+//     defer file.close();
+//
+//     // seek to first record 
+//     try file.seekTo(40);
+//     var fb2:[24]u8 = undefined;
+//     const bytes_read = try file.read(&fb2);
+//     // current_offset = 
+// }
 
 pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
     var fb1:[256]u8 = undefined;
@@ -124,19 +124,28 @@ pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
     defer file.close();
     
     var end_reached:bool = false;
-    var offset:u64 = 0;
+    var offset:u64 = 40;
 
     var fb2:[256]u8 = undefined;
     while (end_reached != true) {
         try file.seekTo(offset);
         const bytes_read = try file.read(&fb2);
+        if (bytes_read == 0) {
+            end_reached = true;
+            break;
+        }
         const string_offset:u64 = fb2[0..7];
-        const string_length:u64 = fb2[8..11];
+        const string_length:u32 = fb2[8..11];
+        offset = std.mem.readInt(u64, &string_offset, .little) + std.mem.readInt(u32, &string_length, .little);
         // how to convert bytes to int? for doing 
-        // offset = 
+        // offset = string_offset + string_length; 
     }
-
+    return offset;
 }
+
+// test "findLatestRecordOffset test" {
+//     findLatestRecordOffset()
+// } 
 
 // const record_table =  extern struct {
 //     string_offset:u64,
