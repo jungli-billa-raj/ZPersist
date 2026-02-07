@@ -109,5 +109,38 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
     const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
     var file = try std.fs.cwd().openFile(path, .{.mode = .read_write });
     defer file.close();
+
+    // seek to first record 
+    try file.seekTo(40);
+    var fb2:[24]u8 = undefined;
+    const bytes_read = try file.read(&fb2);
     // current_offset = 
 }
+
+pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
+    var fb1:[256]u8 = undefined;
+    const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
+    var file = try std.fs.cwd().openFile(path, .{.mode = .read_write });
+    defer file.close();
+    
+    var end_reached:bool = false;
+    var offset:u64 = 0;
+
+    var fb2:[256]u8 = undefined;
+    while (end_reached != true) {
+        try file.seekTo(offset);
+        const bytes_read = try file.read(&fb2);
+        const string_offset:u64 = fb2[0..7];
+        const string_length:u64 = fb2[8..11];
+        // how to convert bytes to int? for doing 
+        // offset = 
+    }
+
+}
+
+// const record_table =  extern struct {
+//     string_offset:u64,
+//     string_length:u32,
+//     flags:u32, // 0-done 1-deleted 2-in process
+//     next_record_offset:u64,
+// };
