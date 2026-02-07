@@ -26,10 +26,11 @@ const header =  extern struct {
 // 0       8     String offset (u64)
 // 8       4     String length (u32)
 // 12      4     Flags (done, deleted, etc.)
-const record_table =  struct {
+// 16      8     Next Record Offset (u64) 
+const record_table =  extern struct {
     string_offset:u64,
     string_length:u32,
-    flags:u32, // 0-done 1-deleted
+    flags:u32, // 0-done 1-deleted 2-in process
     next_record_offset:u64,
 };
 
@@ -87,7 +88,6 @@ pub fn create_new_file(name:[]const u8) !void{
     // try writer.writeStruct(h); // Or use the built-in struct writer
     try writer_interface.writeStruct(h, .little);
     try writer_interface.flush();
-    try writer_interface.print("Written Successfully", .{});
 }
 
 test "create_new_file" {
@@ -99,3 +99,15 @@ test "create_new_file" {
 // const file = try cwd.openFile("output.bin", .{ .mode = .read_write });
 // try file.seekFromEnd(0); // Move the cursor to the end
 // try file.writeAll(&more_bytes);
+
+pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
+    var newRecord = record_table{
+        .flags = 2,
+        .string_length = data.len,
+    };
+    var fb1:[256]u8 = undefined;
+    const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
+    var file = try std.fs.cwd().openFile(path, .{.mode = .read_write });
+    defer file.close();
+    // current_offset = 
+}
