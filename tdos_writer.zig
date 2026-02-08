@@ -29,9 +29,8 @@ const header =  extern struct {
 // 16      8     Next Record Offset (u64) 
 const record_table =  extern struct {
     string_offset:u64,
-    string_length:u32,
-    flags:u32, // 0-done 1-deleted 2-in process
-    next_record_offset:u64,
+    string_length:u64,
+    flags:u32, // 0-done 1-deleted 
 };
 
 // [String Blob]
@@ -54,7 +53,6 @@ test "struct" {
         .string_offset = 56, 
         .string_length = 10, 
         .flags = 0,
-        .next_record_offset = 56 + 10 ,
     };
     std.debug.print("{}\n", .{rt});
 }
@@ -100,26 +98,9 @@ pub fn create_new_file(name:[]const u8) !void{
 // try file.seekFromEnd(0); // Move the cursor to the end
 // try file.writeAll(&more_bytes);
 
-// pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
-//     var newRecord = record_table{
-//         .flags = 2,
-//         .string_length = data.len,
-//     };
-//     var fb1:[256]u8 = undefined;
-//     const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
-//     var file = try std.fs.cwd().openFile(path, .{.mode = .read_write });
-//     defer file.close();
-//
-//     // seek to first record 
-//     try file.seekTo(40);
-//     var fb2:[24]u8 = undefined;
-//     const bytes_read = try file.read(&fb2);
-//     // current_offset = 
-// }
-
 pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
     const header_size:u32 = 40;
-    const record_meta_size:u32 = 24;
+    const record_meta_size:u32 = 20;
 
     var fb1:[256]u8 = undefined;
     const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
@@ -157,3 +138,33 @@ pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
 //     flags:u32, // 0-done 1-deleted 2-in process
 //     next_record_offset:u64,
 // };
+
+pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
+    var fb1:[256]u8 = undefined;
+    const record_meta_size:u32 = 20;
+    const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
+    var file = try std.fs.cwd().openFile(path, .{.mode = .read_write });
+    defer file.close();
+
+    const newRecord = record_table{
+        .flags = 0,
+        .string_length = data.len,
+        .string_offset = try file.getPos() + record_meta_size,
+    };
+
+    // seek to first record 
+    // try file.seekTo(findLatestRecordOffset(file_name));
+    try file.seekTo(0);
+
+    var file_buffer: [320]u8 = undefined; 
+    var writer = file.writer(&file_buffer);
+    const writer_interface = &writer.interface;
+    // try writer.writeStruct(h); // Or use the built-in struct writer
+    try writer_interface.writeStruct(newRecord, .little);
+    try writer_interface.writeAll(data);
+    try writer_interface.flush();
+}
+
+test "addRecord" {
+    try addRecord("test_file", "Hello, my name is Raj");
+}
