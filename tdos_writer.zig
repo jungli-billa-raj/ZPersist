@@ -134,9 +134,9 @@ pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
             end_reached = true;
             break;
         }
-        const string_offset:[8]u8 = fb2[0..8].*;
-        const string_length:[4]u8 = fb2[9..13].*;
-        offset = std.mem.readInt(u64, &string_offset, .little) + std.mem.readInt(u32, &string_length, .little);
+        const string_offset:u64 = std.mem.readInt(u64, fb2[0..8], .little);
+        const string_length:u32 = std.mem.readInt(u32, fb2[8..12], .little);
+        offset = string_offset + string_length;
         // how to convert bytes to int? for doing 
         // offset = string_offset + string_length; 
     }
