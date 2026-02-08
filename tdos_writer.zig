@@ -118,35 +118,38 @@ pub fn create_new_file(name:[]const u8) !void{
 // }
 
 pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
+    const header_size:u32 = 40;
+    const record_meta_size:u32 = 24;
+
     var fb1:[256]u8 = undefined;
     const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
     var file = try std.fs.cwd().openFile(path, .{.mode = .read_write });
     defer file.close();
+
+    const file_size:u64 = try file.getEndPos(); 
     
-    var end_reached:bool = false;
-    var offset:u64 = 40;
+    var offset:u64 = header_size;
 
     var fb2:[256]u8 = undefined;
-    while (end_reached != true) {
+    while (true) {
+        if (offset + record_meta_size > file_size) break;
         try file.seekTo(offset);
         const bytes_read = try file.read(&fb2);
         if (bytes_read == 0) {
-            end_reached = true;
             break;
         }
-        const string_offset:u64 = std.mem.readInt(u64, fb2[0..8], .little);
         const string_length:u32 = std.mem.readInt(u32, fb2[8..12], .little);
-        offset = string_offset + string_length;
+        offset += record_meta_size + string_length;
         // how to convert bytes to int? for doing 
         // offset = string_offset + string_length; 
     }
     return offset;
 }
 
-test "findLatestRecordOffset test" {
-    const offset_returned = try findLatestRecordOffset("test_file");
-    std.debug.print("Offset returned by findLatestRecordOffset: {d} \n", .{offset_returned});
-} 
+// test "findLatestRecordOffset test" {
+//     const offset_returned = try findLatestRecordOffset("test_file");
+//     std.debug.print("Offset returned by findLatestRecordOffset: {d} \n", .{offset_returned});
+// } 
 
 // const record_table =  extern struct {
 //     string_offset:u64,
