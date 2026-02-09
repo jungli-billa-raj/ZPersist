@@ -88,10 +88,10 @@ pub fn create_new_file(name:[]const u8) !void{
     try writer_interface.flush();
 }
 
-// test "create_new_file" {
-//     try create_new_file("test_file");
-//     //I'm not testing the first few bytes yet. 
-// }
+test "create_new_file" {
+    try create_new_file("test_file");
+    //I'm not testing the first few bytes yet. 
+}
 
 // This will come in handy
 // const file = try cwd.openFile("output.bin", .{ .mode = .read_write });
@@ -167,4 +167,8 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
 
 test "addRecord" {
     try addRecord("test_file", "Hello, my name is Raj");
+    try addRecord("test_file", "Hello, my name is Aadarsh");
+    try addRecord("test_file", "Hello, my name is Suraj");
+    try addRecord("test_file", "Hello, my name is Siddhanth");
+    // only one is being appended and the rest are removed
 }
