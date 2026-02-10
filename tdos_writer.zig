@@ -27,7 +27,7 @@ const header =  extern struct {
 // 8       4     String length (u32)
 // 12      4     Flags (done, deleted, etc.)
 // 16      8     Next Record Offset (u64) 
-const record_table =  packed struct {
+const record_table =  extern struct {
     string_offset:u64,
     string_length:u64,
     flags:u32, // 0-done 1-deleted 
@@ -160,13 +160,14 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
 
     try file.seekTo(record_offset);
 
-    var fb2: [256]u8 = undefined; 
-    var writer = file.writer(&fb2);
+    // var fb2: [256]u8 = undefined; 
+    // var writer = file.writer(&fb2);
+    var writer = file.writer(&.{});
     const writer_interface = &writer.interface;
     // try writer.writeStruct(h); // Or use the built-in struct writer
     try writer_interface.writeStruct(newRecord, .little);
     try writer_interface.writeAll(data);
-    try writer_interface.flush();
+    // try writer_interface.flush();
 }
 
 test "addRecord" {
