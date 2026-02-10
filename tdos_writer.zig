@@ -27,7 +27,7 @@ const header =  extern struct {
 // 8       4     String length (u32)
 // 12      4     Flags (done, deleted, etc.)
 // 16      8     Next Record Offset (u64) 
-const record_table =  extern struct {
+const record_table =  packed struct {
     string_offset:u64,
     string_length:u64,
     flags:u32, // 0-done 1-deleted 
@@ -146,7 +146,7 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
     defer file.close();
 
     const RECORD_META_SIZE:u32 = @sizeOf(record_table);
-    std.debug.print("size of record_table:{any}", .{@sizeOf(record_table)});
+    std.debug.print("size of record_table:{any} bytes\n", .{@sizeOf(record_table)});
     // Determining append point 
     const file_size = try file.getEndPos();
     const record_offset = file_size;
