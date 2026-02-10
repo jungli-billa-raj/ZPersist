@@ -59,6 +59,11 @@ test "struct" {
 
 // create new file function 
 pub fn create_new_file(name:[]const u8) !void{
+    var pathBuffer:[256]u8 = undefined;
+    const path = try std.fmt.bufPrint(&pathBuffer, "{s}.tdos", .{name});
+
+    var file = try std.fs.cwd().createFile(path, .{.read = true });
+    defer file.close();
 
     const h = header{
         // .magic = "TDOS",
@@ -67,10 +72,9 @@ pub fn create_new_file(name:[]const u8) !void{
         .file_size = 0,
         .record_count = 0,
     };
-    var pathBuffer:[256]u8 = undefined;
-    const path = try std.fmt.bufPrint(&pathBuffer, "{s}.tdos", .{name});
-    var file = try std.fs.cwd().createFile(path, .{.read = true });
-    defer file.close();
+
+
+    try file.writeAll(std.mem.asBytes(&h));
 
     // var buffer:[256]u8 = undefined;
     // var writer = file.writer(&buffer);
@@ -79,12 +83,12 @@ pub fn create_new_file(name:[]const u8) !void{
     // // flushing is important while using a buffered writer 
     // try writer.interface.flush();
 
-    var file_buffer: [1024]u8 = undefined; 
-    var writer = file.writer(&file_buffer);
-    const writer_interface = &writer.interface;
-    // try writer.writeStruct(h); // Or use the built-in struct writer
-    try writer_interface.writeStruct(h, .little);
-    try writer_interface.flush();
+    // var file_buffer: [1024]u8 = undefined; 
+    // var writer = file.writer(&file_buffer);
+    // const writer_interface = &writer.interface;
+    // // try writer.writeStruct(h); // Or use the built-in struct writer
+    // try writer_interface.writeStruct(h, .little);
+    // try writer_interface.flush();
 }
 
 // test "create_new_file" {
@@ -141,16 +145,18 @@ pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
 pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
     var fb1:[256]u8 = undefined;
     const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
+
+    // Open in read write mode
     var file = try std.fs.cwd().openFile(path, .{.mode = .read_write });
     defer file.close();
 
-    const RECORD_META_SIZE:u32 = @sizeOf(record_table);
-    std.debug.print("size of record_table:{any} bytes\n", .{@sizeOf(record_table)});
     // Determining append point 
+    const RECORD_META_SIZE:u32 = @sizeOf(record_table);
     const file_size = try file.getEndPos();
+    // try file.seekTo(record_offset);
+    try file.seekTo(file_size);
     std.debug.print("addRecord(): file_size before write:{any}\n", .{file_size});
-    const record_offset = file_size;
-    const string_offset = record_offset + RECORD_META_SIZE;
+    const string_offset = file_size + RECORD_META_SIZE;
 
     const newRecord = record_table{
         .flags = 0,
@@ -158,8 +164,6 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
         .string_offset = string_offset,
     };
 
-    // try file.seekTo(record_offset);
-    try file.seekTo(record_offset);
 
 //     var fb2: [1024]u8 = undefined; 
 //     var writer = file.writer(&fb2);
@@ -173,6 +177,7 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
     try file.writeAll(std.mem.asBytes(&newRecord));
     try file.writeAll(data);
 
+    // update Header --- PENDING ---
 }
 
 test "addRecord" {
