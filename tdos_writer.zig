@@ -15,7 +15,6 @@ const header =  extern struct {
     version:u16 = 1,
     header_size:u16,
     record_count:u64,
-    record_table_offset:u64,
     // string_blob_offset:u64,
     file_size:u64,
 };
@@ -45,7 +44,6 @@ test "struct" {
         .header_size = 0,
         .file_size = 0,
         .record_count = 0,
-        .record_table_offset = 40,
     };
     // std.debug.print("{}\n", .{h});
 
@@ -55,6 +53,8 @@ test "struct" {
         .flags = 0,
     };
     // std.debug.print("{}\n", .{rt});
+    std.debug.print("size of header struct is {any}\n", .{@sizeOf(header)});
+    std.debug.print("size of record_table struct is {any}\n", .{@sizeOf(record_table)});
 }
 
 // create new file function 
@@ -66,7 +66,6 @@ pub fn create_new_file(name:[]const u8) !void{
         .header_size = 40,
         .file_size = 0,
         .record_count = 0,
-        .record_table_offset = 40,
     };
     var pathBuffer:[256]u8 = undefined;
     const path = try std.fmt.bufPrint(&pathBuffer, "{s}.tdos", .{name});
@@ -80,7 +79,7 @@ pub fn create_new_file(name:[]const u8) !void{
     // // flushing is important while using a buffered writer 
     // try writer.interface.flush();
 
-    var file_buffer: [320]u8 = undefined; 
+    var file_buffer: [1024]u8 = undefined; 
     var writer = file.writer(&file_buffer);
     const writer_interface = &writer.interface;
     // try writer.writeStruct(h); // Or use the built-in struct writer
@@ -159,17 +158,21 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
         .string_offset = string_offset,
     };
 
+    // try file.seekTo(record_offset);
     try file.seekTo(record_offset);
 
-    var fb2: [256]u8 = undefined; 
-    var writer = file.writer(&fb2);
-    const writer_interface = &writer.interface;
-    // try writer.writeStruct(h); // Or use the built-in struct writer
-    try writer_interface.writeStruct(newRecord, .little);
-    try writer_interface.writeAll(data);
-    // std.debug.print("{s}\n", .{fb2[0..]});
-    try writer_interface.flush();
-    // std.debug.print("{any}", .{fb2[0..]});
+//     var fb2: [1024]u8 = undefined; 
+//     var writer = file.writer(&fb2);
+//     const writer_interface = &writer.interface;
+//     // try writer.writeStruct(h); // Or use the built-in struct writer
+//     try writer_interface.writeStruct(newRecord, .little);
+//     try writer_interface.writeAll(data);
+//     // std.debug.print("{s}\n", .{fb2[0..]});
+//     try writer_interface.flush();
+//     // std.debug.print("{any}", .{fb2[0..]});
+    try file.writeAll(std.mem.asBytes(&newRecord));
+    try file.writeAll(data);
+
 }
 
 test "addRecord" {
