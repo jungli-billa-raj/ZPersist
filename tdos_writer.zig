@@ -149,6 +149,7 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
     std.debug.print("size of record_table:{any} bytes\n", .{@sizeOf(record_table)});
     // Determining append point 
     const file_size = try file.getEndPos();
+    std.debug.print("addRecord(): file_size before write:{any}\n", .{file_size});
     const record_offset = file_size;
     const string_offset = record_offset + RECORD_META_SIZE;
 
@@ -160,17 +161,19 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
 
     try file.seekTo(record_offset);
 
-    // var fb2: [256]u8 = undefined; 
-    // var writer = file.writer(&fb2);
-    var writer = file.writer(&.{});
+    var fb2: [256]u8 = undefined; 
+    var writer = file.writer(&fb2);
     const writer_interface = &writer.interface;
     // try writer.writeStruct(h); // Or use the built-in struct writer
     try writer_interface.writeStruct(newRecord, .little);
     try writer_interface.writeAll(data);
-    // try writer_interface.flush();
+    // std.debug.print("{s}\n", .{fb2[0..]});
+    try writer_interface.flush();
+    // std.debug.print("{any}", .{fb2[0..]});
 }
 
 test "addRecord" {
+    std.debug.print("=== new test run ===\n", .{});
     try create_new_file("test_file");
 
     try addRecord("test_file", "Hello, my name is Raj");
