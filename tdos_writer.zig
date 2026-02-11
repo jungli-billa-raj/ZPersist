@@ -15,7 +15,6 @@ const header =  extern struct {
     version:u16 = 1,
     header_size:u16,
     record_count:u64,
-    // string_blob_offset:u64,
     file_size:u64,
 };
 
@@ -62,7 +61,7 @@ pub fn create_new_file(name:[]const u8) !void{
     var pathBuffer:[256]u8 = undefined;
     const path = try std.fmt.bufPrint(&pathBuffer, "{s}.tdos", .{name});
 
-    var file = try std.fs.cwd().createFile(path, .{.read = true });
+    var file = try std.fs.cwd().createFile(path, .{});
     defer file.close();
 
     const h = header{
@@ -73,13 +72,19 @@ pub fn create_new_file(name:[]const u8) !void{
         .record_count = 0,
     };
 
+    var fb1:[4096]u8 = undefined;
+    const bw = file.writer(&fb1);
+    var writer = bw.interface;
 
-    try file.writeAll(std.mem.asBytes(&h));
+    try writer.writeAll(&h.magic);
+    try writer.writeInt(u16, h.version, .little);
+    try writer.writeInt(u16, h.header_size, .little);
+    try writer.writeInt(u64, h.record_count, .little);
+    try writer.writeInt(u64, h.file_size, .little);
 
-    // var buffer:[256]u8 = undefined;
-    // var writer = file.writer(&buffer);
-    // try writer.interface.writeAll("Hello zig bytes here!!");
-    //
+    try writer.flush();
+
+    
     // // flushing is important while using a buffered writer 
     // try writer.interface.flush();
 
