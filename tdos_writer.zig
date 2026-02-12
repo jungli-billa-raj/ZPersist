@@ -1,31 +1,14 @@
 const std = @import("std");
+const expect = std.testing.expect;
 
-// [Header] (fixed size)
-// Offset  Size  Meaning
-// 0       4     Magic "TDOS"
-// 4       2     Version (u16) = 1
-// 6       2     Header size (u16)
-// 8       8     Record count (u64)
-// 16      8     Record table offset (u64)
-// 24      8     String blob offset (u64)
-// 32      8     File size (u64)
 const header =  extern struct {
-    // magic:[]const u8 = "TDOS", //this has a pointer+length. Not compatible with C or Binary. 
     magic:[4]u8 = "TDOS".*, // here dereferencing is necessary to get the data "TDOS" and not the pointer to it. 
     version:u16 = 1,
     header_size:u16,
     record_count:u64,
-    // string_blob_offset:u64,
     file_size:u64,
 };
 
-// [Record Table]
-// Each record (fixed 16 bytes):
-// Offset  Size  Meaning
-// 0       8     String offset (u64)
-// 8       4     String length (u32)
-// 12      4     Flags (done, deleted, etc.)
-// 16      8     Next Record Offset (u64) 
 const record_table =  extern struct {
     string_offset:u64,
     string_length:u64,
@@ -37,7 +20,7 @@ const record_table =  extern struct {
 // No struct needed
 
 // ----------------------testing structs----------------------
-test "struct" {
+test "struct" { 
     _ = header{
         // .magic = "TDOS",
         .version = 2, 
@@ -90,17 +73,6 @@ pub fn create_new_file(name:[]const u8) !void{
     try writer_interface.writeInt(u64, h.file_size, .little);
     try writer_interface.flush();
 }
-
-// test "create_new_file" {
-//     try create_new_file("test_file");
-//     //I'm not testing the first few bytes yet. 
-// }
-
-// This will come in handy
-// const file = try cwd.openFile("output.bin", .{ .mode = .read_write });
-// try file.seekFromEnd(0); // Move the cursor to the end
-// try file.writeAll(&more_bytes);
-
 pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
     const header_size:u32 = 40;
     const record_meta_size:u32 = 20;
@@ -130,18 +102,6 @@ pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
     return offset;
 }
 
-// test "findLatestRecordOffset test" {
-//     const offset_returned = try findLatestRecordOffset("test_file");
-//     std.debug.print("Offset returned by findLatestRecordOffset: {d} \n", .{offset_returned});
-// } 
-
-// const record_table =  extern struct {
-//     string_offset:u64,
-//     string_length:u32,
-//     flags:u32, // 0-done 1-deleted 2-in process
-//     next_record_offset:u64,
-// };
-
 pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
     var fb1:[256]u8 = undefined;
     const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
@@ -168,24 +128,14 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
     var fb2: [1024]u8 = undefined; 
     var writer = file.writer(&fb2);
     const writer_interface = &writer.interface;
-//     // try writer.writeStruct(h); // Or use the built-in struct writer
-//     try writer_interface.writeStruct(newRecord, .little);
-//     try writer_interface.writeAll(data);
-//     // std.debug.print("{s}\n", .{fb2[0..]});
-//     try writer_interface.flush();
-//     // std.debug.print("{any}", .{fb2[0..]});
     try writer_interface.writeInt(u64, newRecord.string_offset, .little);
     try writer_interface.writeInt(u64, newRecord.string_length, .little);
     try writer_interface.writeInt(u32, newRecord.flags, .little);
-    try file.writeAll(data);
+    try writer_interface.writeAll(data);
+    try writer_interface.flush();
 
     // update Header ---PENDING---
 }
-// const record_table =  extern struct {
-//     string_offset:u64,
-//     string_length:u64,
-//     flags:u32, // 0-done 1-deleted 
-// };
 
 test "addRecord" {
     std.debug.print("=== new test run ===\n", .{});
