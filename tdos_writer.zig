@@ -59,13 +59,6 @@ pub fn create_new_file(name:[]const u8) !void{
     var file = try std.fs.cwd().createFile(path, .{.read = true });
     defer file.close();
 
-    // var buffer:[256]u8 = undefined;
-    // var writer = file.writer(&buffer);
-    // try writer.interface.writeAll("Hello zig bytes here!!");
-    //
-    // // flushing is important while using a buffered writer 
-    // try writer.interface.flush();
-
     var file_buffer: [1024]u8 = undefined; 
     var writer = file.writer(&file_buffer);
     const writer_interface = &writer.interface;
@@ -114,7 +107,6 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
     // Determining append point 
     const file_size = try file.getEndPos();
     // try file.seekTo(record_offset);
-    try file.seekTo(file_size);
     std.debug.print("addRecord(): file_size before write:{any}\n", .{file_size});
     const string_offset = file_size + record_table_size;
 
@@ -124,15 +116,18 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
         .string_offset = string_offset,
     };
 
+    try file.seekTo(file_size);
 
     var fb2: [1024]u8 = undefined; 
     var writer = file.writer(&fb2);
+    std.debug.print("{any}\n", .{file.getPos()});
     const writer_interface = &writer.interface;
     try writer_interface.writeInt(u64, newRecord.string_offset, .little);
     try writer_interface.writeInt(u64, newRecord.string_length, .little);
     try writer_interface.writeInt(u32, newRecord.flags, .little);
     try writer_interface.writeAll(data);
-    try writer_interface.flush();
+    // try writer_interface.flush();
+    try writer.flush();
 
     // update Header ---PENDING---
 }
@@ -140,10 +135,10 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
 test "addRecord" {
     std.debug.print("=== new test run ===\n", .{});
     try create_new_file("test_file");
-
+    
     try addRecord("test_file", "Hello, my name is Raj");
-    try addRecord("test_file", "Hello, my name is Aadarsh");
-    try addRecord("test_file", "Hello, my name is Suraj");
-    try addRecord("test_file", "Hello, my name is Siddhanth");
+    // try addRecord("test_file", "Hello, my name is Aadarsh");
+    // try addRecord("test_file", "Hello, my name is Suraj");
+    // try addRecord("test_file", "Hello, my name is Siddhanth");
     // only one is being appended and the rest are removed
 }
