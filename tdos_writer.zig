@@ -15,6 +15,7 @@ const header =  extern struct {
     version:u16 = 1,
     header_size:u16,
     record_count:u64,
+    // string_blob_offset:u64,
     file_size:u64,
 };
 
@@ -58,11 +59,6 @@ test "struct" {
 
 // create new file function 
 pub fn create_new_file(name:[]const u8) !void{
-    var pathBuffer:[256]u8 = undefined;
-    const path = try std.fmt.bufPrint(&pathBuffer, "{s}.tdos", .{name});
-
-    var file = try std.fs.cwd().createFile(path, .{});
-    defer file.close();
 
     const h = header{
         // .magic = "TDOS",
@@ -71,29 +67,24 @@ pub fn create_new_file(name:[]const u8) !void{
         .file_size = 0,
         .record_count = 0,
     };
+    var pathBuffer:[256]u8 = undefined;
+    const path = try std.fmt.bufPrint(&pathBuffer, "{s}.tdos", .{name});
+    var file = try std.fs.cwd().createFile(path, .{.read = true });
+    defer file.close();
 
-    var fb1:[4096]u8 = undefined;
-    const bw = file.writer(&fb1);
-    var writer = bw.interface;
-
-    try writer.writeAll(&h.magic);
-    try writer.writeInt(u16, h.version, .little);
-    try writer.writeInt(u16, h.header_size, .little);
-    try writer.writeInt(u64, h.record_count, .little);
-    try writer.writeInt(u64, h.file_size, .little);
-
-    try writer.flush();
-
-    
+    // var buffer:[256]u8 = undefined;
+    // var writer = file.writer(&buffer);
+    // try writer.interface.writeAll("Hello zig bytes here!!");
+    //
     // // flushing is important while using a buffered writer 
     // try writer.interface.flush();
 
-    // var file_buffer: [1024]u8 = undefined; 
-    // var writer = file.writer(&file_buffer);
-    // const writer_interface = &writer.interface;
-    // // try writer.writeStruct(h); // Or use the built-in struct writer
-    // try writer_interface.writeStruct(h, .little);
-    // try writer_interface.flush();
+    var file_buffer: [1024]u8 = undefined; 
+    var writer = file.writer(&file_buffer);
+    const writer_interface = &writer.interface;
+    // try writer.writeStruct(h); // Or use the built-in struct writer
+    try writer_interface.writeStruct(h, .little);
+    try writer_interface.flush();
 }
 
 // test "create_new_file" {
@@ -182,7 +173,7 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
     try file.writeAll(std.mem.asBytes(&newRecord));
     try file.writeAll(data);
 
-    // update Header --- PENDING ---
+    // update Header ---PENDING---
 }
 
 test "addRecord" {
