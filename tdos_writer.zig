@@ -83,7 +83,11 @@ pub fn create_new_file(name:[]const u8) !void{
     var writer = file.writer(&file_buffer);
     const writer_interface = &writer.interface;
     // try writer.writeStruct(h); // Or use the built-in struct writer
-    try writer_interface.writeStruct(h, .little);
+    try writer_interface.writeAll("TDOS");
+    try writer_interface.writeInt(u16, h.version, .little);
+    try writer_interface.writeInt(u16, h.header_size, .little);
+    try writer_interface.writeInt(u64, h.record_count, .little);
+    try writer_interface.writeInt(u64, h.file_size, .little);
     try writer_interface.flush();
 }
 
@@ -161,20 +165,27 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
     };
 
 
-//     var fb2: [1024]u8 = undefined; 
-//     var writer = file.writer(&fb2);
-//     const writer_interface = &writer.interface;
+    var fb2: [1024]u8 = undefined; 
+    var writer = file.writer(&fb2);
+    const writer_interface = &writer.interface;
 //     // try writer.writeStruct(h); // Or use the built-in struct writer
 //     try writer_interface.writeStruct(newRecord, .little);
 //     try writer_interface.writeAll(data);
 //     // std.debug.print("{s}\n", .{fb2[0..]});
 //     try writer_interface.flush();
 //     // std.debug.print("{any}", .{fb2[0..]});
-    try file.writeAll(std.mem.asBytes(&newRecord));
+    try writer_interface.writeInt(u64, newRecord.string_offset, .little);
+    try writer_interface.writeInt(u64, newRecord.string_length, .little);
+    try writer_interface.writeInt(u32, newRecord.flags, .little);
     try file.writeAll(data);
 
     // update Header ---PENDING---
 }
+// const record_table =  extern struct {
+//     string_offset:u64,
+//     string_length:u64,
+//     flags:u32, // 0-done 1-deleted 
+// };
 
 test "addRecord" {
     std.debug.print("=== new test run ===\n", .{});
