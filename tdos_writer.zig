@@ -8,12 +8,15 @@ const header =  extern struct {
     record_count:u64,
     file_size:u64,
 };
+const header_size = @sizeOf(header);
 
 const record_table =  extern struct {
     string_offset:u64,
     string_length:u64,
     flags:u32, // 0-done 1-deleted 
 };
+const record_table_size = @sizeOf(record_table);
+
 
 // [String Blob]
 // Raw UTF-8 bytes, tightly packed
@@ -43,10 +46,11 @@ test "struct" {
 // create new file function 
 pub fn create_new_file(name:[]const u8) !void{
 
+
     const h = header{
         // .magic = "TDOS",
         .version = 1, 
-        .header_size = 40,
+        .header_size = header_size,
         .file_size = 0,
         .record_count = 0,
     };
@@ -74,9 +78,6 @@ pub fn create_new_file(name:[]const u8) !void{
     try writer_interface.flush();
 }
 pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
-    const header_size:u32 = 40;
-    const record_meta_size:u32 = 20;
-
     var fb1:[256]u8 = undefined;
     const path = try std.fmt.bufPrint(&fb1, "{s}.tdos", .{file_name});
     var file = try std.fs.cwd().openFile(path, .{.mode = .read_write });
@@ -88,14 +89,14 @@ pub fn findLatestRecordOffset(file_name:[]const u8) !u64{
 
     var fb2:[256]u8 = undefined;
     while (true) {
-        if (offset + record_meta_size > file_size) break;
+        if (offset + record_table_size > file_size) break;
         try file.seekTo(offset);
         const bytes_read = try file.read(&fb2);
         if (bytes_read == 0) {
             break;
         }
         const string_length:u32 = std.mem.readInt(u32, fb2[8..12], .little);
-        offset += record_meta_size + string_length;
+        offset += record_table_size + string_length;
         // how to convert bytes to int? for doing 
         // offset = string_offset + string_length; 
     }
@@ -111,12 +112,11 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
     defer file.close();
 
     // Determining append point 
-    const RECORD_META_SIZE:u32 = @sizeOf(record_table);
     const file_size = try file.getEndPos();
     // try file.seekTo(record_offset);
     try file.seekTo(file_size);
     std.debug.print("addRecord(): file_size before write:{any}\n", .{file_size});
-    const string_offset = file_size + RECORD_META_SIZE;
+    const string_offset = file_size + record_table_size;
 
     const newRecord = record_table{
         .flags = 0,
