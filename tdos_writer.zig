@@ -116,18 +116,18 @@ pub fn addRecord(file_name:[]const u8, data:[]const u8) !void {
         .string_offset = string_offset,
     };
 
-    try file.seekTo(file_size);
+    // try file.seekTo(file_size);
 
     var fb2: [1024]u8 = undefined; 
     var writer = file.writer(&fb2);
+    try writer.seekTo(file_size);
     std.debug.print("{any}\n", .{file.getPos()});
     const writer_interface = &writer.interface;
     try writer_interface.writeInt(u64, newRecord.string_offset, .little);
     try writer_interface.writeInt(u64, newRecord.string_length, .little);
     try writer_interface.writeInt(u32, newRecord.flags, .little);
     try writer_interface.writeAll(data);
-    // try writer_interface.flush();
-    try writer.flush();
+    try writer_interface.flush();
 
     // update Header ---PENDING---
 }
@@ -137,8 +137,8 @@ test "addRecord" {
     try create_new_file("test_file");
     
     try addRecord("test_file", "Hello, my name is Raj");
-    // try addRecord("test_file", "Hello, my name is Aadarsh");
-    // try addRecord("test_file", "Hello, my name is Suraj");
-    // try addRecord("test_file", "Hello, my name is Siddhanth");
+    try addRecord("test_file", "Hello, my name is Aadarsh");
+    try addRecord("test_file", "Hello, my name is Suraj");
+    try addRecord("test_file", "Hello, my name is Siddhanth");
     // only one is being appended and the rest are removed
 }
